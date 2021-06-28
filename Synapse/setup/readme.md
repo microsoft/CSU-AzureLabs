@@ -77,7 +77,7 @@ Wait until the deployment completes successfully before proceeding to the next s
 
 In the Azure Portal, navigate to the resource group you used to deploy the Synapse Analytics workspace (see [Pre-requisites for deployment](#pre-requisites-for-deployment) above for details).
 
-Select the `Tags` section and add a new tag named `DeploymentId`. Use the unique suffix as the value of the tag and then select `Apply` to save it.
+Select the `Tags` section and add check if a tag named `DeploymentId` was added to the resource group. If it's already there, make sure its values matches your unique suffix. If not, add a new tag named `DeploymentId` (use the unique suffix as the value of the tag), and then select `Apply` to save it.
 
 ![Synapse Analytics workspace resource group tagging](./media/asaworkspace-deploy-tag.png)
 
