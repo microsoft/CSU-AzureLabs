@@ -134,7 +134,7 @@ Set-AzKeyVaultAccessPolicy -ResourceGroupName $resourceGroupName -VaultName $key
 Set-AzKeyVaultAccessPolicy -ResourceGroupName $resourceGroupName -VaultName $keyVaultName -ObjectId $id -PermissionsToSecrets set,delete,get,list
 
 #remove need to ask for the password in script.
-$global:sqlPassword = $(Get-AzKeyVaultSecret -VaultName $keyVaultName -Name "SqlPassword").SecretValueText
+$global:sqlPassword = $(Get-AzKeyVaultSecret -VaultName $keyVaultName -Name "SqlPassword" -AsPlainText)
 
 Write-Information "Create SQL-USER-ASA Key Vault Secret"
 $secretValue = ConvertTo-SecureString $sqlPassword -AsPlainText -Force
@@ -230,11 +230,16 @@ if ($download)
         Write-Information "Copying sample sales raw data directories from the public data account..."
 
         $dataDirectories = @{
-                salesmall = "wwi-02,wwi-02/sale-small/"
+                salesmall_2014 = "wwi-02,wwi-02/sale-small/Year=2014"
+                salesmall_2015 = "wwi-02,wwi-02/sale-small/Year=2015"
+                salesmall_2016 = "wwi-02,wwi-02/sale-small/Year=2016"
+                salesmall_2017 = "wwi-02,wwi-02/sale-small/Year=2017"
+                salesmall_2018 = "wwi-02,wwi-02/sale-small/Year=2018"
+                salesmall_2019 = "wwi-02,wwi-02/sale-small/Year=2019"
                 analytics = "wwi-02,wwi-02/campaign-analytics/"
                 factsale = "wwi-02,wwi-02/sale-csv/"
-                security = "wwi-02,wwi-02-reduced/security/"
-                salespoc = "wwi-02,wwi-02/sale-poc/"
+                # security = "wwi-02,wwi-02-reduced/security/"
+                # salespoc = "wwi-02,wwi-02/sale-poc/"
         }
 
         foreach ($dataDirectory in $dataDirectories.Keys) {
