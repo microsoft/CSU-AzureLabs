@@ -378,61 +378,6 @@ foreach ($dataset in $loadingDatasets.Keys) {
         Wait-ForOperation -WorkspaceName $workspaceName -OperationId $result.operationId
 }
 
-<# POC - Day 4 - Must be run after Day 3 content/pipeline loads#>
-
-Write-Information "Create wwi_poc schema and tables in $($sqlPoolName)"
-
-$params = @{}
-$result = Execute-SQLScriptFile -SQLScriptsPath $sqlScriptsPath -WorkspaceName $workspaceName -SQLPoolName $sqlPoolName -FileName "16-create-poc-schema" -Parameters $params
-$result
-
-Write-Information "Create the [wwi_poc.Sale] table in SQL pool $($sqlPoolName)"
-
-$result = Execute-SQLScriptFile -SQLScriptsPath $sqlScriptsPath -WorkspaceName $workspaceName -SQLPoolName $sqlPoolName -FileName "17-create-wwi-poc-sale-heap" -Parameters $params
-$result
-
-Write-Information "Create data sets for PoC data load in SQL pool $($sqlPoolName)"
-
-$loadingDatasets = @{
-        wwi02_poc_customer_adls = $dataLakeAccountName
-        wwi02_poc_customer_asa = $sqlPoolName.ToLower()
-}
-
-foreach ($dataset in $loadingDatasets.Keys) {
-        Write-Information "Creating dataset $($dataset)"
-        $result = Create-Dataset -DatasetsPath $datasetsPath -WorkspaceName $workspaceName -Name $dataset -LinkedServiceName $loadingDatasets[$dataset]
-        Wait-ForOperation -WorkspaceName $workspaceName -OperationId $result.operationId
-}
-
-Write-Information "Create pipeline to load PoC data into the SQL pool"
-
-$params = @{
-        BLOB_STORAGE_LINKED_SERVICE_NAME = $blobStorageAccountName
-}
-$loadingPipelineName = "Setup - Load SQL Pool"
-$fileName = "import_poc_customer_data"
-
-Write-Information "Creating pipeline $($loadingPipelineName)"
-
-$result = Create-Pipeline -PipelinesPath $pipelinesPath -WorkspaceName $workspaceName -Name $loadingPipelineName -FileName $fileName -Parameters $params
-Wait-ForOperation -WorkspaceName $workspaceName -OperationId $result.operationId
-
-Write-Information "Running pipeline $($loadingPipelineName)"
-
-$result = Run-Pipeline -WorkspaceName $workspaceName -Name $loadingPipelineName
-$result = Wait-ForPipelineRun -WorkspaceName $workspaceName -RunId $result.runId
-$result
-
-Write-Information "Deleting pipeline $($loadingPipelineName)"
-
-$result = Delete-ASAObject -WorkspaceName $workspaceName -Category "pipelines" -Name $loadingPipelineName
-Wait-ForOperation -WorkspaceName $workspaceName -OperationId $result.operationId
-
-foreach ($dataset in $loadingDatasets.Keys) {
-        Write-Information "Deleting dataset $($dataset)"
-        $result = Delete-ASAObject -WorkspaceName $workspaceName -Category "datasets" -Name $dataset
-        Wait-ForOperation -WorkspaceName $workspaceName -OperationId $result.operationId
-}
 
 Write-Information "Create tables in wwi_perf schema in SQL pool $($sqlPoolName)"
 
@@ -452,7 +397,7 @@ foreach ($script in $scripts.Keys) {
         
         # initiate the script and wait until it finishes
         Execute-SQLScriptFile -SQLScriptsPath $sqlScriptsPath -WorkspaceName $workspaceName -SQLPoolName $sqlPoolName -FileName $script -ForceReturn $true
-        Wait-ForSQLQuery -WorkspaceName $workspaceName -SQLPoolName $sqlPoolName -Label $scripts[$script] -ReferenceTime $refTime
+        #Wait-ForSQLQuery -WorkspaceName $workspaceName -SQLPoolName $sqlPoolName -Label $scripts[$script] -ReferenceTime $refTime
 }
 
 #Write-Information "Scale down the $($sqlPoolName) SQL pool to DW500c after baby MOADs import."

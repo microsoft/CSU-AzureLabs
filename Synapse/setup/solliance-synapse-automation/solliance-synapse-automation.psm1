@@ -897,11 +897,11 @@ function Execute-SQLQuery {
 
     $uri = "https://$($WorkspaceName).sql.azuresynapse.net:1443/databases/$($SQLPoolName)/query?api-version=2018-08-01-preview&application=ArcadiaSqlEditor&topRows=5000&queryTimeoutInMinutes=59&allResultSets=true"
 
+    Ensure-ValidTokens
+
     $headers = @{ 
         Authorization="Bearer $($synapseSQLToken)"
     }
-
-    Ensure-ValidTokens
 
     $csrf = GetCSRF "Bearer $synapseSQLToken" "$($WorkspaceName).sql.azuresynapse.net:1443" 300000;
     $headers.add("X-CSRF-Signature", $csrf);
