@@ -110,19 +110,19 @@ $global:tokenTimes = [ordered]@{
         PowerBI = (Get-Date -Year 1)
 }
 
-Write-Information "Assign Ownership to L400 Proctors on Synapse Workspace"
-Assign-SynapseRole -WorkspaceName $workspaceName -RoleId "6e4bf58a-b8e1-4cc3-bbf9-d73143322b78" -PrincipalId "37548b2e-e5ab-4d2b-b0da-4d812f56c30e"  # Workspace Admin
-Assign-SynapseRole -WorkspaceName $workspaceName -RoleId "7af0c69a-a548-47d6-aea3-d00e69bd83aa" -PrincipalId "37548b2e-e5ab-4d2b-b0da-4d812f56c30e"  # SQL Admin
-Assign-SynapseRole -WorkspaceName $workspaceName -RoleId "c3a6d2f1-a26f-4810-9b0f-591308d5cbf1" -PrincipalId "37548b2e-e5ab-4d2b-b0da-4d812f56c30e"  # Apache Spark Admin
+# Write-Information "Assign Ownership to L400 Proctors on Synapse Workspace"
+# Assign-SynapseRole -WorkspaceName $workspaceName -RoleId "6e4bf58a-b8e1-4cc3-bbf9-d73143322b78" -PrincipalId "37548b2e-e5ab-4d2b-b0da-4d812f56c30e"  # Workspace Admin
+# Assign-SynapseRole -WorkspaceName $workspaceName -RoleId "7af0c69a-a548-47d6-aea3-d00e69bd83aa" -PrincipalId "37548b2e-e5ab-4d2b-b0da-4d812f56c30e"  # SQL Admin
+# Assign-SynapseRole -WorkspaceName $workspaceName -RoleId "c3a6d2f1-a26f-4810-9b0f-591308d5cbf1" -PrincipalId "37548b2e-e5ab-4d2b-b0da-4d812f56c30e"  # Apache Spark Admin
 
 #add the current user...
 $user = Get-AzADUser -UserPrincipalName $userName
-Assign-SynapseRole -WorkspaceName $workspaceName -RoleId "6e4bf58a-b8e1-4cc3-bbf9-d73143322b78" -PrincipalId $user.id  # Workspace Admin
-Assign-SynapseRole -WorkspaceName $workspaceName -RoleId "7af0c69a-a548-47d6-aea3-d00e69bd83aa" -PrincipalId $user.id  # SQL Admin
-Assign-SynapseRole -WorkspaceName $workspaceName -RoleId "c3a6d2f1-a26f-4810-9b0f-591308d5cbf1" -PrincipalId $user.id  # Apache Spark Admin
+# Assign-SynapseRole -WorkspaceName $workspaceName -RoleId "6e4bf58a-b8e1-4cc3-bbf9-d73143322b78" -PrincipalId $user.id  # Workspace Admin
+# Assign-SynapseRole -WorkspaceName $workspaceName -RoleId "7af0c69a-a548-47d6-aea3-d00e69bd83aa" -PrincipalId $user.id  # SQL Admin
+# Assign-SynapseRole -WorkspaceName $workspaceName -RoleId "c3a6d2f1-a26f-4810-9b0f-591308d5cbf1" -PrincipalId $user.id  # Apache Spark Admin
 
-#Set the Azure AD Admin - otherwise it will bail later
-Set-SqlAdministrator $username $user.id;
+# #Set the Azure AD Admin - otherwise it will bail later
+# Set-SqlAdministrator $username $user.id;
 
 #add the permission to the datalake to workspace
 $id = (Get-AzADServicePrincipal -DisplayName $workspacename).id
@@ -475,82 +475,6 @@ $linkedServiceName = "$($sqlPoolName.ToLower())_workload02"
 $result = Create-SQLPoolKeyVaultLinkedService -TemplatesPath $templatesPath -WorkspaceName $workspaceName -Name $linkedServiceName -DatabaseName $sqlPoolName `
                  -UserName "asa.sql.workload02" -KeyVaultLinkedServiceName $keyVaultName -SecretName $keyVaultSQLUserSecretName
 Wait-ForOperation -WorkspaceName $workspaceName -OperationId $result.operationId
-
-
-Write-Information "Create data sets for Lab 08"
-
-$datasets = @{
-        wwi02_sale_small_workload_01_asa = "$($sqlPoolName.ToLower())_workload01"
-        wwi02_sale_small_workload_02_asa = "$($sqlPoolName.ToLower())_workload02"
-}
-
-foreach ($dataset in $datasets.Keys) {
-        Write-Information "Creating dataset $($dataset)"
-        $result = Create-Dataset -DatasetsPath $datasetsPath -WorkspaceName $workspaceName -Name $dataset -LinkedServiceName $datasets[$dataset]
-        Wait-ForOperation -WorkspaceName $workspaceName -OperationId $result.operationId
-}
-
-Write-Information "Create pipelines for Lab 08"
-
-$params = @{}
-$workloadPipelines = [ordered]@{
-        execute_business_analyst_queries = "Lab 08 - Execute Business Analyst Queries"
-        execute_data_analyst_and_ceo_queries = "Lab 08 - Execute Data Analyst and CEO Queries"
-}
-
-foreach ($pipeline in $workloadPipelines.Keys) {
-        Write-Information "Creating workload pipeline $($workloadPipelines[$pipeline])"
-        $result = Create-Pipeline -PipelinesPath $pipelinesPath -WorkspaceName $workspaceName -Name $workloadPipelines[$pipeline] -FileName $pipeline -Parameters $params
-        Wait-ForOperation -WorkspaceName $workspaceName -OperationId $result.operationId
-}
-
-
-Write-Information "Creating Spark notebooks..."
-
-$notebooks = [ordered]@{
-        "Activity 05 - Model Training" = "$artifactsPath\day-03"
-        "Lab 06 - Machine Learning" = "$artifactsPath\day-03\lab-06-machine-learning"
-        "Lab 07 - Spark ML" = "$artifactsPath\day-03\lab-07-spark-ml"
-}
-
-$cellParams = [ordered]@{
-        "#SQL_POOL_NAME#" = $sqlPoolName
-        "#SUBSCRIPTION_ID#" = $subscriptionId
-        "#RESOURCE_GROUP_NAME#" = $resourceGroupName
-        "#AML_WORKSPACE_NAME#" = $amlWorkspaceName
-        "#DATA_LAKE_ACCOUNT_NAME#" = $dataLakeAccountName
-        "#DATA_LAKE_ACCOUNT_KEY#" = $dataLakeAccountKey
-}
-
-foreach ($notebookName in $notebooks.Keys) {
-
-        $notebookFileName = "$($notebooks[$notebookName])\$($notebookName).ipynb"
-        Write-Information "Creating notebook $($notebookName) from $($notebookFileName)"
-        
-        $result = Create-SparkNotebook -TemplatesPath $templatesPath -SubscriptionId $subscriptionId -ResourceGroupName $resourceGroupName `
-                -WorkspaceName $workspaceName -SparkPoolName $sparkPoolName -Name $notebookName -NotebookFileName $notebookFileName -CellParams $cellParams
-        $result = Wait-ForOperation -WorkspaceName $workspaceName -OperationId $result.operationId
-        $result
-}
-
-Write-Information "Create SQL scripts for Lab 05"
-
-$sqlScripts = [ordered]@{
-        "Lab 05 - Exercise 3 - Column Level Security" = "$artifactsPath\day-02\lab-05-security"
-        "Lab 05 - Exercise 3 - Dynamic Data Masking" = "$artifactsPath\day-02\lab-05-security"
-        "Lab 05 - Exercise 3 - Row Level Security" = "$artifactsPath\day-02\lab-05-security"
-        "Activity 03 - Data Warehouse Optimization" = "$artifactsPath\day-02"
-}
-
-foreach ($sqlScriptName in $sqlScripts.Keys) {
-        
-        $sqlScriptFileName = "$($sqlScripts[$sqlScriptName])\$($sqlScriptName).sql"
-        Write-Information "Creating SQL script $($sqlScriptName) from $($sqlScriptFileName)"
-        
-        $result = Create-SQLScript -TemplatesPath $templatesPath -WorkspaceName $workspaceName -Name $sqlScriptName -ScriptFileName $sqlScriptFileName
-        $result = Wait-ForOperation -WorkspaceName $workspaceName -OperationId $result.operationId
-        $result
-}
 
 
 #
