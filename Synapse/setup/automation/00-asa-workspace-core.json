@@ -28,21 +28,9 @@
     "storageBlobDataContributorRoleID": "ba92f5b4-2d11-453d-a403-e96b0029c9fe",
     "storageBlobDataOwnerRoleID": "b7e6dc6d-f1e8-4753-8033-0f276bb0955b",
     "defaultDataLakeStorageAccountUrl": "[concat('https://', variables('adlsStorageAccountName'), '.dfs.core.windows.net')]",
-    "sparkAutoScaleEnabled": "true",
-    "sparkMinNodeCount": "3",
-    "sparkMaxNodeCount": "4",
-    "sparkNodeCount": "0",
-    "sparkNodeSizeFamily": "MemoryOptimized",
-    "sparkNodeSize": "Small",
-    "sparkAutoPauseEnabled": "true",
-    "sparkAutoPauseDelayInMinutes": "15",
-    "sparkVersion": "2.4",
-    "packagesRequirementsFileName": "",
-    "packagesRequirementsContent": "",
     "keyVaultName": "[concat('asakeyvault', parameters('uniqueSuffix'))]",
     "blobStorageAccountName": "[concat('asastore', parameters('uniqueSuffix'))]",
     "applicationInsightsName": "[concat('asaappinsights', parameters('uniqueSuffix'))]",
-    "amlWorkspaceName": "[concat('amlworkspace', parameters('uniqueSuffix'))]",
     "cosmosDbAccountName": "[concat('asacosmosdb', parameters('uniqueSuffix'))]"
   },
   "resources": [
@@ -204,6 +192,7 @@
         "type": "SystemAssigned"
       },
       "properties": {
+        "managedResourceGroupName": "[concat(resourceGroup().name, '-internal')]",
         "defaultDataLakeStorage": {
           "accountUrl": "[variables('defaultDataLakeStorageAccountUrl')]",
           "filesystem": "[variables('defaultDataLakeStorageFilesystemName')]"
@@ -259,34 +248,6 @@
       }
     },
     {
-      "type": "Microsoft.Synapse/workspaces/bigDataPools",
-      "apiVersion": "2019-06-01-preview",
-      "name": "[concat(variables('workspaceName'), '/', variables('sparkComputeName'))]",
-      "location": "[variables('location')]",
-      "dependsOn": [
-        "[concat('Microsoft.Synapse/workspaces/', variables('workspaceName'))]"
-      ],
-      "properties": {
-        "nodeCount": "[variables('sparkNodeCount')]",
-        "nodeSizeFamily": "[variables('sparkNodeSizeFamily')]",
-        "nodeSize": "[variables('sparkNodeSize')]",
-        "autoScale": {
-          "enabled": "[variables('sparkAutoScaleEnabled')]",
-          "minNodeCount": "[variables('sparkMinNodeCount')]",
-          "maxNodeCount": "[variables('sparkMaxNodeCount')]"
-        },
-        "autoPause": {
-          "enabled": "[variables('sparkAutoPauseEnabled')]",
-          "delayInMinutes": "[variables('sparkAutoPauseDelayInMinutes')]"
-        },
-        "sparkVersion": "[variables('sparkVersion')]",
-        "libraryRequirements": {
-          "filename": "[variables('packagesRequirementsFileName')]",
-          "content": "[variables('packagesRequirementsContent')]"
-        }
-      }
-    },
-    {
       "type": "Microsoft.Synapse/workspaces/sqlPools",
       "apiVersion": "2019-06-01-preview",
       "name": "[concat(variables('workspaceName'), '/', variables('sqlComputeName'))]",
@@ -311,30 +272,6 @@
       "kind": "web",
       "properties": {
         "Application_Type": "web"
-      }
-    },
-    {
-      "type": "Microsoft.MachineLearningServices/workspaces",
-      "apiVersion": "2019-11-01",
-      "name": "[variables('amlWorkspaceName')]",
-      "location": "[variables('location')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts', variables('blobStorageAccountName'))]",
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
-        "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]"
-      ],
-      "sku": {
-        "tier": "Enterprise",
-        "name": "Enterprise"
-      },
-      "identity": {
-        "type": "systemAssigned"
-      },
-      "properties": {
-        "friendlyName": "[variables('amlWorkspaceName')]",
-        "keyVault": "[resourceId('Microsoft.KeyVault/vaults',variables('keyVaultName'))]",
-        "applicationInsights": "[resourceId('Microsoft.Insights/components',variables('applicationInsightsName'))]",
-        "storageAccount": "[resourceId('Microsoft.Storage/storageAccounts/',variables('blobStorageAccountName'))]"
       }
     },
     {
