@@ -108,13 +108,13 @@ Once the repository is successfully cloned, you shoud see a result similar to th
 Change your current directory using
 
 ```cmd
-cd asa/hands-on-labs/setup/automation
+cd asa/Synapse/setup/automation
 ```
 
 and then start the setup script using
 
 ```powershell
-.\environment-setup.ps1
+.\01-environment-setup.ps1
 ```
 
 Make sure the selected subscription is the one that contains the resource group where you deployed the Synapse Analytics workspace:
