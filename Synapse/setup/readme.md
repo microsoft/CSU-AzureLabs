@@ -1,3 +1,3 @@
 # Deploy and Configure Lab Environment
 
-Synapse Analytics lab setup instructions.
+To deploy and configure your lab environment, 

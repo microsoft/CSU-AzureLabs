@@ -90,7 +90,7 @@ Once the Cloud Shell instance becomes available, run ```az login``` to make sure
 Clone the content packs repository into the `asa` local folder using
 
 ```cmd
-git clone https://github.com/solliancenet/azure-synapse-analytics-ga-content-packs asa
+git clone https://github.com/microsoft/CSU-AzureLabs asa
 ```
 
 If GIT asks for credentials, provide your GitHub username and password.
