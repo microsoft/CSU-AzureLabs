@@ -1,8 +1,8 @@
 # Deploy and configure your Azure Synapse Analytics workspace
 
->**IMPORTANT!**
+>**IMPORTANT**
 >
->This setup procedure needs to be executed only once for the Azure Synapse Analytics in this repo. If you have already excuted the deployment and configuration procedure for a previous lab, you do not need to run it again.
+>This setup procedure needs to be executed only once for the Azure Synapse Analytics labs in this repo. If you have already excuted the deployment and configuration procedure for a previous lab, you do not need to run it again.
 
 ## Pre-requisites for deployment
 
