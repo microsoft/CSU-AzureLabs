@@ -901,18 +901,17 @@ function Execute-SQLQuery {
         Authorization="Bearer $($synapseSQLToken)"
     }
 
-    if ($ForceReturn) {
-        try {
-            Ensure-ValidTokens
-            $result = Invoke-WebRequest -Uri $uri -Method POST -Body $SQLQuery -Headers $headers -ContentType "application/x-www-form-urlencoded; charset=UTF-8" -UseBasicParsing -TimeoutSec 15
-        } catch {}
-        return
-    }
-
     Ensure-ValidTokens
 
     $csrf = GetCSRF "Bearer $synapseSQLToken" "$($WorkspaceName).sql.azuresynapse.net:1443" 300000;
     $headers.add("X-CSRF-Signature", $csrf);
+
+    if ($ForceReturn) {
+        try {
+            $result = Invoke-WebRequest -Uri $uri -Method POST -Body $SQLQuery -Headers $headers -ContentType "application/x-www-form-urlencoded; charset=UTF-8" -UseBasicParsing -TimeoutSec 15
+        } catch {}
+        return
+    }
 
     $rawResult = Invoke-WebRequest -Uri $uri -Method POST -Body $SQLQuery -Headers $headers `
         -ContentType "application/x-www-form-urlencoded; charset=UTF-8" -UseBasicParsing
