@@ -1,5 +1,4 @@
 $InformationPreference = "Continue"
-
 $IsCloudLabs = Test-Path C:\LabFiles\AzureCreds.ps1;
 
 if($IsCloudLabs){
@@ -7,6 +6,7 @@ if($IsCloudLabs){
                 Remove-Module solliance-synapse-automation
         }
         Import-Module "..\solliance-synapse-automation"
+        Initialize-ExecutionTiming
 
         . C:\LabFiles\AzureCreds.ps1
 
@@ -45,6 +45,7 @@ if($IsCloudLabs){
                 Remove-Module solliance-synapse-automation
         }
         Import-Module "..\solliance-synapse-automation"
+        Initialize-ExecutionTiming
 
         #Different approach to run automation in Cloud Shell
         $subs = Get-AzSubscription | Select-Object -ExpandProperty Name
@@ -162,6 +163,8 @@ $blobStorageAccountKey = List-StorageAccountKeys -SubscriptionId $subscriptionId
 $result = Create-BlobStorageLinkedService -TemplatesPath $templatesPath -WorkspaceName $workspaceName -Name $blobStorageAccountName  -Key $blobStorageAccountKey
 Wait-ForOperation -WorkspaceName $workspaceName -OperationId $result.operationId
 
+Get-ExecutionTiming
+
 Write-Information "Copy Public Data"
 
 Ensure-ValidTokens
@@ -225,6 +228,7 @@ if ($download)
                 $destination = $dataLakeStorageBlobUrl + $singleFiles[$singleFile] + $destinationSasKey
                 Write-Information "Copying file $($source) to $($destination)"
                 & $azCopyCommand copy $source $destination 
+                Get-ExecutionTiming
         }
 
         Write-Information "Copying sample sales raw data directories from the public data account..."
@@ -253,6 +257,7 @@ if ($download)
                 $destination = $dataLakeStorageBlobUrl + $path + $destinationSasKey
                 Write-Information "Copying directory $($source) to $($destination)"
                 & $azCopyCommand copy $source $destination --recursive=true
+                Get-ExecutionTiming
         }
 }
 
@@ -313,6 +318,8 @@ $params = @{
 $result = Execute-SQLScriptFile -SQLScriptsPath $sqlScriptsPath -WorkspaceName $workspaceName -SQLPoolName $sqlPoolName -FileName "06-create-tables-in-wwi-security-schema" -Parameters $params
 $result
 
+Get-ExecutionTiming
+
 Write-Information "Create linked service for SQL pool $($sqlPoolName) with user asa.sql.admin"
 
 $linkedServiceName = $sqlPoolName.ToLower()
@@ -359,6 +366,8 @@ Write-Information "Creating pipeline $($loadingPipelineName)"
 $result = Create-Pipeline -PipelinesPath $pipelinesPath -WorkspaceName $workspaceName -Name $loadingPipelineName -FileName $fileName -Parameters $params
 Wait-ForOperation -WorkspaceName $workspaceName -OperationId $result.operationId
 
+Get-ExecutionTiming
+
 Write-Information "Running pipeline $($loadingPipelineName)"
 
 $result = Run-Pipeline -WorkspaceName $workspaceName -Name $loadingPipelineName
@@ -366,6 +375,8 @@ $result = Wait-ForPipelineRun -WorkspaceName $workspaceName -RunId $result.runId
 $result
 
 Ensure-ValidTokens
+
+Get-ExecutionTiming
 
 Write-Information "Deleting pipeline $($loadingPipelineName)"
 
@@ -378,6 +389,7 @@ foreach ($dataset in $loadingDatasets.Keys) {
         Wait-ForOperation -WorkspaceName $workspaceName -OperationId $result.operationId
 }
 
+Get-ExecutionTiming
 
 Write-Information "Create tables in wwi_perf schema in SQL pool $($sqlPoolName)"
 
@@ -398,6 +410,8 @@ foreach ($script in $scripts.Keys) {
         # initiate the script and wait until it finishes
         Execute-SQLScriptFile -SQLScriptsPath $sqlScriptsPath -WorkspaceName $workspaceName -SQLPoolName $sqlPoolName -FileName $script -ForceReturn $true
         #Wait-ForSQLQuery -WorkspaceName $workspaceName -SQLPoolName $sqlPoolName -Label $scripts[$script] -ReferenceTime $refTime
+
+        Get-ExecutionTiming
 }
 
 #Write-Information "Scale down the $($sqlPoolName) SQL pool to DW500c after baby MOADs import."
@@ -426,6 +440,7 @@ $result = Create-SQLPoolKeyVaultLinkedService -TemplatesPath $templatesPath -Wor
                  -UserName "asa.sql.workload02" -KeyVaultLinkedServiceName $keyVaultName -SecretName $keyVaultSQLUserSecretName
 Wait-ForOperation -WorkspaceName $workspaceName -OperationId $result.operationId
 
+Get-ExecutionTiming
 
 #
 # =============== COSMOS DB IMPORT - MUST REMAIN LAST IN SCRIPT !!! ====================
@@ -456,6 +471,8 @@ if ($download)
                 $destination = $dataLakeStorageBlobUrl + $path + $destinationSasKey
                 Write-Information "Copying directory $($source) to $($destination)"
                 & $azCopyCommand copy $source $destination --recursive=true
+
+                Get-ExecutionTiming
         }
 }
 
@@ -464,6 +481,8 @@ $documentCount = Count-CosmosDbDocuments -SubscriptionId $subscriptionId -Resour
                 -CosmosDbDatabase $cosmosDbDatabase -CosmosDbContainer $cosmosDbContainer
 
 Write-Information "Found $documentCount in Cosmos DB container $($cosmosDbContainer)"
+
+Get-ExecutionTiming
 
 Install-Module -Name Az.CosmosDB
 
@@ -504,6 +523,8 @@ if ($documentCount -ne 100000)
         $result = Create-Pipeline -PipelinesPath $pipelinesPath -WorkspaceName $workspaceName -Name $name -FileName $fileName
         Wait-ForOperation -WorkspaceName $workspaceName -OperationId $result.operationId
 
+        Get-ExecutionTiming
+
         Write-Information "Running pipeline $($name)"
         $pipelineRunResult = Run-Pipeline -WorkspaceName $workspaceName -Name $name
         $result = Wait-ForPipelineRun -WorkspaceName $workspaceName -RunId $pipelineRunResult.runId
@@ -514,6 +535,8 @@ if ($documentCount -ne 100000)
         #                         
         #                    COPY 100000 records to CosmosDB ==> SELECT VALUE COUNT(1) FROM C
         #
+
+        Get-ExecutionTiming
 
         $name = "Setup - Import User Profile Data into Cosmos DB"
         Write-Information "Delete pipeline $($name)"
@@ -546,3 +569,5 @@ Update-AzCosmosDBSqlContainer -ResourceGroupName $resourceGroupName `
         -Name $cosmosDbContainer -Throughput 400 `
         -PartitionKeyKind $container.Resource.PartitionKey.Kind `
         -PartitionKeyPath $container.Resource.PartitionKey.Paths
+
+Get-ExecutionTiming

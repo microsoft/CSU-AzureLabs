@@ -1648,6 +1648,16 @@ Function Generate-CosmosDbMasterKeyAuthorizationSignature {
     [System.Web.HttpUtility]::UrlEncode("type=$keyType&ver=$tokenVersion&sig=$signature")
 }
 
+function Initialize-ExecutionTiming {
+    $global:startTime = (Get-Date).ToUniversalTime()
+}
+
+function Get-ExecutionTiming {
+    Write-Information ("EXECUTION TIMING: {0:N4} minutes elapsed" -f ((Get-Date).ToUniversalTime() - $global:startTime).TotalMinutes)
+}
+
+Export-ModuleMember -Function Initialize-ExecutionTiming
+Export-ModuleMember -Function Get-ExecutionTiming
 Export-ModuleMember -Function List-StorageAccountKeys
 Export-ModuleMember -Function List-CosmosDBKeys
 Export-ModuleMember -Function Create-KeyVaultLinkedService
