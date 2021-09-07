@@ -1,0 +1,11 @@
+{
+	"name": "asakeyvaultps01",
+	"type": "Microsoft.Synapse/workspaces/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureKeyVault",
+		"typeProperties": {
+			"baseUrl": "https://asakeyvaultps01.vault.azure.net/"
+		}
+	}
+}
